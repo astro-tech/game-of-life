@@ -5,10 +5,10 @@ from tkinter import ttk
 class ApplicationWindow:
     def __init__(self, master):
         self.master = master
-        self.v = {'cell_size': tk.IntVar(value=100), 'row_no': tk.IntVar(value=5)}
-        self.col_no = tk.IntVar(value=5)
+        self.v = {'cell_size': tk.IntVar(value=100), 'row_no': tk.IntVar(value=5), 'col_no': tk.IntVar(value=5)}
         self.m = {}     # this has to be a separate dict from self.v otherwise error
-        self.db = {r: {c: 0 for c in range(1, self.col_no.get() + 1)} for r in range(1, self.v['row_no'].get() + 1)}
+        self.db = {
+            r: {c: 0 for c in range(1, self.v['col_no'].get() + 1)} for r in range(1, self.v['row_no'].get() + 1)}
         self.db[3][3] = 1
         # print(self.db)
 
@@ -59,7 +59,7 @@ class ApplicationWindow:
         generate_control(row_controls, 'row_no', 4, self.v['row_no'])
 
     def draw_grid(self):
-        self.m['canvas'] = tk.Canvas(self.master, width=self.v['cell_size'].get() * self.col_no.get(),
+        self.m['canvas'] = tk.Canvas(self.master, width=self.v['cell_size'].get() * self.v['col_no'].get(),
                                      height=self.v['cell_size'].get() * self.v['row_no'].get(), background='green',
                                      highlightthickness=1)
         self.m['canvas'].grid(column=1, row=0, sticky='n')
@@ -98,6 +98,15 @@ class ApplicationWindow:
         if parameter == 'cell_size' and 0 < self.v['cell_size'].get() + increment < 301:
             self.v['cell_size'].set(self.v['cell_size'].get() + increment)
         elif parameter == 'row_no':
+            length = len(self.db)
+            if increment > 0:
+                for d in range(increment):
+                    self.db[length + d + 1] = {c: 0 for c in range(1, self.v['col_no'].get() + 1)}
+            else:
+                absolute = abs(increment)
+                for d in range(absolute):
+                    print(length - d)
+                    self.db.pop(length - d, None)
             self.v['row_no'].set(self.v['row_no'].get() + increment)
         self.m['canvas'].destroy()
         self.draw_grid()
