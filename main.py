@@ -5,11 +5,10 @@ from tkinter import ttk
 class ApplicationWindow:
     def __init__(self, master):
         self.master = master
-        self.cell_size = tk.IntVar(value=100)
-        self.row_no = 5
-        self.col_no = 5
-        self.m = {}
-        self.db = {r: {c: 0 for c in range(1, self.col_no + 1)} for r in range(1, self.row_no + 1)}
+        self.v = {'cell_size': tk.IntVar(value=100), 'row_no': tk.IntVar(value=5)}
+        self.col_no = tk.IntVar(value=5)
+        self.m = {}     # this has to be a separate dict from self.v otherwise error
+        self.db = {r: {c: 0 for c in range(1, self.col_no.get() + 1)} for r in range(1, self.v['row_no'].get() + 1)}
         self.db[3][3] = 1
         # print(self.db)
 
@@ -26,15 +25,15 @@ class ApplicationWindow:
             gen_used = gen[btn_no-1::-1]
             col = 0
             for btn, icr in gen_used:
-                self.m[name + btn + 'u'] = \
-                    tk.Button(parent, text='▲', width=1, height=1, command=lambda n=icr: self.modify_cell_size(n))
-                self.m[name + btn + 'd'] = \
-                    tk.Button(parent, text='▼', width=1, height=1, command=lambda n=icr: self.modify_cell_size(-n))
+                self.m[name + btn + 'u'] = tk.Button(
+                    parent, text='▲', width=1, height=1, command=lambda n=name, i=icr: self.modify_grid(n, i))
+                self.m[name + btn + 'd'] = tk.Button(
+                    parent, text='▼', width=1, height=1, command=lambda n=name, i=icr: self.modify_grid(n, -i))
                 self.m[name + btn + 'u'].grid(column=col, row=0)
                 self.m[name + btn + 'd'].grid(column=col, row=2)
                 col += 1
-                self.m[name + '_size_label'] = ttk.Label(parent, textvariable=variable, font='helvetica 24')
-                self.m[name + '_size_label'].grid(column=0, row=1, columnspan=btn_no, sticky='e')
+                self.m[name + '_label'] = ttk.Label(parent, textvariable=variable, font='helvetica 24')
+                self.m[name + '_label'].grid(column=0, row=1, columnspan=btn_no, sticky='e')
 
         control_panel = ttk.Frame(self.master, relief='solid', padding=6)
         control_panel.grid(column=0, row=0, sticky='n, s')
@@ -45,18 +44,23 @@ class ApplicationWindow:
         parameters_label = ttk.Label(control_panel, text='Grid parameters:')
         cell_label = ttk.Label(control_panel, text='Cell size:')
         cell_controls = ttk.Frame(control_panel)
+        row_label = ttk.Label(control_panel, text='Number of rows:')
+        row_controls = ttk.Frame(control_panel)
         controls_label.grid(column=0, row=0, pady=5)
         play_button.grid(column=0, row=1, pady=2)
         pause_button.grid(column=0, row=2, pady=2)
         parameters_label.grid(column=0, row=3, pady=5)
         cell_label.grid(column=0, row=4)
         cell_controls.grid(column=0, row=5, sticky='e')
+        row_label.grid(column=0, row=6)
+        row_controls.grid(column=0, row=7, sticky='e')
 
-        generate_control(cell_controls, 'cell', 3, self.cell_size)
+        generate_control(cell_controls, 'cell_size', 3, self.v['cell_size'])
+        generate_control(row_controls, 'row_no', 4, self.v['row_no'])
 
     def draw_grid(self):
-        self.m['canvas'] = tk.Canvas(self.master, width=self.cell_size.get() * self.col_no,
-                                     height=self.cell_size.get() * self.row_no, background='green',
+        self.m['canvas'] = tk.Canvas(self.master, width=self.v['cell_size'].get() * self.col_no.get(),
+                                     height=self.v['cell_size'].get() * self.v['row_no'].get(), background='green',
                                      highlightthickness=1)
         self.m['canvas'].grid(column=1, row=0, sticky='n')
         for r in self.db:
@@ -67,10 +71,10 @@ class ApplicationWindow:
                 else:
                     fill = 'grey20'
                     status = 'dead'
-                x0 = (c - 1) * self.cell_size.get()
-                y0 = (r - 1) * self.cell_size.get()
-                x1 = c * self.cell_size.get()
-                y1 = r * self.cell_size.get()
+                x0 = (c - 1) * self.v['cell_size'].get()
+                y0 = (r - 1) * self.v['cell_size'].get()
+                x1 = c * self.v['cell_size'].get()
+                y1 = r * self.v['cell_size'].get()
                 self.m['canvas'].create_rectangle(x0, y0, x1, y1, fill=fill, outline='grey40',
                                                   activefill='red', width=1, tag=(f'{r},{c}', status))
                 # # e not used but always created as event, so a new kw parameter n is created which is local to lambda
@@ -90,9 +94,11 @@ class ApplicationWindow:
         # print(r, c)
         # print(self.db)
 
-    def modify_cell_size(self, increment):
-        if self.cell_size.get() + increment > 0:
-            self.cell_size.set(self.cell_size.get() + increment)
+    def modify_grid(self, parameter, increment):
+        if parameter == 'cell_size' and 0 < self.v['cell_size'].get() + increment < 301:
+            self.v['cell_size'].set(self.v['cell_size'].get() + increment)
+        elif parameter == 'row_no':
+            self.v['row_no'].set(self.v['row_no'].get() + increment)
         self.m['canvas'].destroy()
         self.draw_grid()
 
