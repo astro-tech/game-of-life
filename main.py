@@ -16,18 +16,43 @@ class ApplicationWindow:
         self.draw_widgets()
         self.draw_squares()
         # self.m['canvas'].after(3000, lambda: self.m['canvas'].itemconfigure('dead', fill='white', state=tk.DISABLED))
+        # self.m['canvas'].after(3000, lambda: self.m['canvas'].delete('all'))
         # for i in range(1, 26):
         #     print(self.m['canvas'].gettags(i))
+        self.master.bind('<<Increment>>', lambda e: print('incr'))
+        self.master.bind('<<Decrement>>', lambda e: print('decr'))
+        self.master.bind('<<MyOwnEvent>>', lambda e: print('cell_d'))
 
     def draw_widgets(self):
-        self.master.option_add('*tearOff', False)
-        main_menu = tk.Menu(self.master)
-        self.master['menu'] = main_menu
-        file_menu = tk.Menu(main_menu)
-        main_menu.add_cascade(label='File', menu=file_menu, underline=0)
+        # self.master.option_add('*tearOff', False)
+        # main_menu = tk.Menu(self.master)
+        # self.master['menu'] = main_menu
+        # file_menu = tk.Menu(main_menu)
+        # main_menu.add_cascade(label='File', menu=file_menu, underline=0)
 
         control_panel = ttk.Frame(self.master, width=100, height=500, borderwidth=2, relief='solid')
-        control_panel.grid(column=0, row=0, sticky='n')
+        control_panel.grid(column=0, row=0, sticky='n, s')
+        controls_label = ttk.Label(control_panel, text='Controls:')
+        controls_label.grid(column=0, row=0, pady=5, padx=5)
+        play_button = ttk.Button(control_panel, text='Play')
+        pause_button = ttk.Button(control_panel, text='Pause')
+        play_button.grid(column=0, row=1, pady=2, padx=5)
+        pause_button.grid(column=0, row=2, pady=2, padx=5)
+        prm_label = ttk.Label(control_panel, text='Grid parameters:')
+        prm_label.grid(column=0, row=3, pady=5, padx=5)
+
+        cell_label = ttk.Label(control_panel, text='Cell size')
+        cell_label.grid(column=0, row=4, pady=0, padx=5)
+        cell_frame = ttk.Frame(control_panel)
+        cell_frame.grid(column=0, row=5, sticky='e')
+
+        self.m['cell_d'] = tk.IntVar(value=1)
+        self.m['cell_u'] = tk.IntVar(value=9)
+        cell_d = ttk.Spinbox(cell_frame, from_=0.0, to=9.0, width=2, textvariable=self.m['cell_d'], command=lambda: self.master.event_generate("<<MyOwnEvent>>"))
+        cell_d.grid(column=0, row=0, pady=0, padx=1)
+        cell_u = ttk.Spinbox(cell_frame, from_=0.0, to=9.0, width=2, textvariable=self.m['cell_u'])
+        cell_u.grid(column=1, row=0, pady=0, padx=1)
+
         self.m['canvas'] = tk.Canvas(self.master, width=self.cell_size * self.col_no,
                                      height=self.cell_size * self.row_no, background='green', highlightthickness=1)
         self.m['canvas'].grid(column=1, row=0, sticky='n')
