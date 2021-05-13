@@ -5,7 +5,7 @@ from tkinter import ttk
 class ApplicationWindow:
     def __init__(self, master):
         self.master = master
-        self.cell_size = 100
+        self.cell_size = tk.IntVar(value=100)
         self.row_no = 5
         self.col_no = 5
         self.m = {}
@@ -16,12 +16,8 @@ class ApplicationWindow:
         self.draw_widgets()
         self.draw_squares()
         # self.m['canvas'].after(3000, lambda: self.m['canvas'].itemconfigure('dead', fill='white', state=tk.DISABLED))
-        # self.m['canvas'].after(3000, lambda: self.m['canvas'].delete('all'))
         # for i in range(1, 26):
         #     print(self.m['canvas'].gettags(i))
-        self.master.bind('<<Increment>>', lambda e: print('incr'))
-        self.master.bind('<<Decrement>>', lambda e: print('decr'))
-        self.master.bind('<<MyOwnEvent>>', lambda e: print('cell_d'))
 
     def draw_widgets(self):
         # self.master.option_add('*tearOff', False)
@@ -44,20 +40,30 @@ class ApplicationWindow:
         cell_label = ttk.Label(control_panel, text='Cell size')
         cell_label.grid(column=0, row=4, pady=0, padx=5)
         cell_frame = ttk.Frame(control_panel)
-        cell_frame.grid(column=0, row=5, sticky='e')
+        cell_frame.grid(column=0, row=5, sticky='e', padx=5)
 
-        self.m['cell_d'] = tk.IntVar(value=1)
-        self.m['cell_u'] = tk.IntVar(value=9)
-        cell_d = ttk.Spinbox(cell_frame, from_=0.0, to=9.0, width=2, textvariable=self.m['cell_d'], command=lambda: self.master.event_generate("<<MyOwnEvent>>"))
-        cell_d.grid(column=0, row=0, pady=0, padx=1)
-        cell_u = ttk.Spinbox(cell_frame, from_=0.0, to=9.0, width=2, textvariable=self.m['cell_u'])
-        cell_u.grid(column=1, row=0, pady=0, padx=1)
+        cell_h_u = tk.Button(cell_frame, text='▲', width=1, height=1, command=lambda: self.modify_cell_size(100))
+        cell_h_u.grid(column=0, row=0)
+        cell_d_u = tk.Button(cell_frame, text='▲', width=1, height=1, command=lambda: self.modify_cell_size(10))
+        cell_d_u.grid(column=1, row=0)
+        cell_u_u = tk.Button(cell_frame, text='▲', width=1, height=1, command=lambda: self.modify_cell_size(1))
+        cell_u_u.grid(column=2, row=0)
 
-        self.m['canvas'] = tk.Canvas(self.master, width=self.cell_size * self.col_no,
-                                     height=self.cell_size * self.row_no, background='green', highlightthickness=1)
-        self.m['canvas'].grid(column=1, row=0, sticky='n')
+        cell_size_label = ttk.Label(cell_frame, textvariable=self.cell_size, font='helvetica 24')
+        cell_size_label.grid(column=0, row=1, columnspan=3, sticky='e')
+
+        cell_h_d = tk.Button(cell_frame, text='▼', width=1, height=1, command=lambda: self.modify_cell_size(-100))
+        cell_h_d.grid(column=0, row=2)
+        cell_d_d = tk.Button(cell_frame, text='▼', width=1, height=1, command=lambda: self.modify_cell_size(-10))
+        cell_d_d.grid(column=1, row=2)
+        cell_u_d = tk.Button(cell_frame, text='▼', width=1, height=1, command=lambda: self.modify_cell_size(-1))
+        cell_u_d.grid(column=2, row=2)
 
     def draw_squares(self):
+        self.m['canvas'] = tk.Canvas(self.master, width=self.cell_size.get() * self.col_no,
+                                     height=self.cell_size.get() * self.row_no, background='green',
+                                     highlightthickness=1)
+        self.m['canvas'].grid(column=1, row=0, sticky='n')
         for r in self.db:
             for c in self.db[r]:
                 if self.db[r][c] == 1:
@@ -66,10 +72,10 @@ class ApplicationWindow:
                 else:
                     fill = 'grey20'
                     status = 'dead'
-                x0 = (c - 1) * self.cell_size
-                y0 = (r - 1) * self.cell_size
-                x1 = c * self.cell_size
-                y1 = r * self.cell_size
+                x0 = (c - 1) * self.cell_size.get()
+                y0 = (r - 1) * self.cell_size.get()
+                x1 = c * self.cell_size.get()
+                y1 = r * self.cell_size.get()
                 self.m['canvas'].create_rectangle(x0, y0, x1, y1, fill=fill, outline='grey40',
                                                   activefill='red', width=1, tag=(f'{r},{c}', status))
                 # # e not used but always created as event, so a new kw parameter n is created which is local to lambda
@@ -88,6 +94,12 @@ class ApplicationWindow:
         self.m['canvas'].itemconfigure(f'{r},{c}', fill=new_fill, tag=(f'{r},{c}', new_status))
         # print(r, c)
         # print(self.db)
+
+    def modify_cell_size(self, increment):
+        if self.cell_size.get() + increment > 0:
+            self.cell_size.set(self.cell_size.get() + increment)
+        self.m['canvas'].destroy()
+        self.draw_squares()
 
 
 if __name__ == '__main__':
