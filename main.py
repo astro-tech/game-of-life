@@ -46,6 +46,8 @@ class ApplicationWindow:
         cell_controls = ttk.Frame(control_panel)
         row_label = ttk.Label(control_panel, text='Number of rows:')
         row_controls = ttk.Frame(control_panel)
+        col_label = ttk.Label(control_panel, text='Number of columns:')
+        col_controls = ttk.Frame(control_panel)
         controls_label.grid(column=0, row=0, pady=5)
         play_button.grid(column=0, row=1, pady=2)
         pause_button.grid(column=0, row=2, pady=2)
@@ -54,9 +56,12 @@ class ApplicationWindow:
         cell_controls.grid(column=0, row=5, sticky='e')
         row_label.grid(column=0, row=6)
         row_controls.grid(column=0, row=7, sticky='e')
+        col_label.grid(column=0, row=8)
+        col_controls.grid(column=0, row=9, sticky='e')
 
         generate_control(cell_controls, 'cell_size', 3, self.v['cell_size'])
         generate_control(row_controls, 'row_no', 4, self.v['row_no'])
+        generate_control(col_controls, 'col_no', 4, self.v['col_no'])
 
     def draw_grid(self):
         self.m['canvas'] = tk.Canvas(self.master, width=self.v['cell_size'].get() * self.v['col_no'].get(),
@@ -97,7 +102,7 @@ class ApplicationWindow:
     def modify_grid(self, parameter, increment):
         if parameter == 'cell_size' and 0 < self.v['cell_size'].get() + increment < 301:
             self.v['cell_size'].set(self.v['cell_size'].get() + increment)
-        elif parameter == 'row_no':
+        elif parameter == 'row_no' and 0 < self.v['row_no'].get() + increment < 1002:
             length = len(self.db)
             if increment > 0:
                 for d in range(increment):
@@ -105,9 +110,20 @@ class ApplicationWindow:
             else:
                 absolute = abs(increment)
                 for d in range(absolute):
-                    print(length - d)
                     self.db.pop(length - d, None)
             self.v['row_no'].set(self.v['row_no'].get() + increment)
+        elif parameter == 'col_no' and 0 < self.v['col_no'].get() + increment < 1002:
+            length = len(self.db[1])
+            if increment > 0:
+                for r in self.db:
+                    for d in range(increment):
+                        self.db[r][length + d + 1] = 0
+            else:
+                absolute = abs(increment)
+                for r in self.db:
+                    for d in range(absolute):
+                        self.db[r].pop(length - d, None)
+            self.v['col_no'].set(self.v['col_no'].get() + increment)
         self.m['canvas'].destroy()
         self.draw_grid()
 
