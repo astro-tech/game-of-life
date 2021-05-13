@@ -14,52 +14,47 @@ class ApplicationWindow:
         # print(self.db)
 
         self.draw_widgets()
-        self.draw_squares()
+        self.draw_grid()
         # self.m['canvas'].after(3000, lambda: self.m['canvas'].itemconfigure('dead', fill='white', state=tk.DISABLED))
         # for i in range(1, 26):
         #     print(self.m['canvas'].gettags(i))
+        # print(self.m)
 
     def draw_widgets(self):
-        # self.master.option_add('*tearOff', False)
-        # main_menu = tk.Menu(self.master)
-        # self.master['menu'] = main_menu
-        # file_menu = tk.Menu(main_menu)
-        # main_menu.add_cascade(label='File', menu=file_menu, underline=0)
+        def generate_control(parent, name, btn_no, variable):
+            gen = [('_u_', 1), ('_d_', 10), ('_h_', 100), ('_k_', 1000)]
+            gen_used = gen[btn_no-1::-1]
+            col = 0
+            for btn, icr in gen_used:
+                self.m[name + btn + 'u'] = \
+                    tk.Button(parent, text='▲', width=1, height=1, command=lambda n=icr: self.modify_cell_size(n))
+                self.m[name + btn + 'd'] = \
+                    tk.Button(parent, text='▼', width=1, height=1, command=lambda n=icr: self.modify_cell_size(-n))
+                self.m[name + btn + 'u'].grid(column=col, row=0)
+                self.m[name + btn + 'd'].grid(column=col, row=2)
+                col += 1
+                self.m[name + '_size_label'] = ttk.Label(parent, textvariable=variable, font='helvetica 24')
+                self.m[name + '_size_label'].grid(column=0, row=1, columnspan=btn_no, sticky='e')
 
-        control_panel = ttk.Frame(self.master, width=100, height=500, borderwidth=2, relief='solid')
+        control_panel = ttk.Frame(self.master, relief='solid', padding=6)
         control_panel.grid(column=0, row=0, sticky='n, s')
+
         controls_label = ttk.Label(control_panel, text='Controls:')
-        controls_label.grid(column=0, row=0, pady=5, padx=5)
         play_button = ttk.Button(control_panel, text='Play')
         pause_button = ttk.Button(control_panel, text='Pause')
-        play_button.grid(column=0, row=1, pady=2, padx=5)
-        pause_button.grid(column=0, row=2, pady=2, padx=5)
-        prm_label = ttk.Label(control_panel, text='Grid parameters:')
-        prm_label.grid(column=0, row=3, pady=5, padx=5)
+        parameters_label = ttk.Label(control_panel, text='Grid parameters:')
+        cell_label = ttk.Label(control_panel, text='Cell size:')
+        cell_controls = ttk.Frame(control_panel)
+        controls_label.grid(column=0, row=0, pady=5)
+        play_button.grid(column=0, row=1, pady=2)
+        pause_button.grid(column=0, row=2, pady=2)
+        parameters_label.grid(column=0, row=3, pady=5)
+        cell_label.grid(column=0, row=4)
+        cell_controls.grid(column=0, row=5, sticky='e')
 
-        cell_label = ttk.Label(control_panel, text='Cell size')
-        cell_label.grid(column=0, row=4, pady=0, padx=5)
-        cell_frame = ttk.Frame(control_panel)
-        cell_frame.grid(column=0, row=5, sticky='e', padx=5)
+        generate_control(cell_controls, 'cell', 3, self.cell_size)
 
-        cell_h_u = tk.Button(cell_frame, text='▲', width=1, height=1, command=lambda: self.modify_cell_size(100))
-        cell_h_u.grid(column=0, row=0)
-        cell_d_u = tk.Button(cell_frame, text='▲', width=1, height=1, command=lambda: self.modify_cell_size(10))
-        cell_d_u.grid(column=1, row=0)
-        cell_u_u = tk.Button(cell_frame, text='▲', width=1, height=1, command=lambda: self.modify_cell_size(1))
-        cell_u_u.grid(column=2, row=0)
-
-        cell_size_label = ttk.Label(cell_frame, textvariable=self.cell_size, font='helvetica 24')
-        cell_size_label.grid(column=0, row=1, columnspan=3, sticky='e')
-
-        cell_h_d = tk.Button(cell_frame, text='▼', width=1, height=1, command=lambda: self.modify_cell_size(-100))
-        cell_h_d.grid(column=0, row=2)
-        cell_d_d = tk.Button(cell_frame, text='▼', width=1, height=1, command=lambda: self.modify_cell_size(-10))
-        cell_d_d.grid(column=1, row=2)
-        cell_u_d = tk.Button(cell_frame, text='▼', width=1, height=1, command=lambda: self.modify_cell_size(-1))
-        cell_u_d.grid(column=2, row=2)
-
-    def draw_squares(self):
+    def draw_grid(self):
         self.m['canvas'] = tk.Canvas(self.master, width=self.cell_size.get() * self.col_no,
                                      height=self.cell_size.get() * self.row_no, background='green',
                                      highlightthickness=1)
@@ -99,7 +94,7 @@ class ApplicationWindow:
         if self.cell_size.get() + increment > 0:
             self.cell_size.set(self.cell_size.get() + increment)
         self.m['canvas'].destroy()
-        self.draw_squares()
+        self.draw_grid()
 
 
 if __name__ == '__main__':
