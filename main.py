@@ -9,6 +9,7 @@ class ApplicationWindow:
         self.m = {}     # this has to be a separate dict from self.v otherwise error
         self.db = {
             r: {c: 0 for c in range(1, self.v['col_no'].get() + 1)} for r in range(1, self.v['row_no'].get() + 1)}
+        self.valid_coordinates = [str(r) + ',' + str(c) for r in self.db for c in self.db[r]]
         self.db[3][3] = 1
         # print(self.db)
 
@@ -41,6 +42,7 @@ class ApplicationWindow:
         controls_label = ttk.Label(control_panel, text='Controls:')
         play_button = ttk.Button(control_panel, text='Play')
         pause_button = ttk.Button(control_panel, text='Pause')
+        next_button = ttk.Button(control_panel, text='Next', command=self.iterate)
         parameters_label = ttk.Label(control_panel, text='Grid parameters:')
         cell_label = ttk.Label(control_panel, text='Cell size:')
         cell_controls = ttk.Frame(control_panel)
@@ -51,13 +53,14 @@ class ApplicationWindow:
         controls_label.grid(column=0, row=0, pady=5)
         play_button.grid(column=0, row=1, pady=2)
         pause_button.grid(column=0, row=2, pady=2)
-        parameters_label.grid(column=0, row=3, pady=5)
-        cell_label.grid(column=0, row=4)
-        cell_controls.grid(column=0, row=5, sticky='e')
-        row_label.grid(column=0, row=6)
-        row_controls.grid(column=0, row=7, sticky='e')
-        col_label.grid(column=0, row=8)
-        col_controls.grid(column=0, row=9, sticky='e')
+        next_button.grid(column=0, row=3, pady=2)
+        parameters_label.grid(column=0, row=4, pady=5)
+        cell_label.grid(column=0, row=5)
+        cell_controls.grid(column=0, row=6, sticky='e')
+        row_label.grid(column=0, row=7)
+        row_controls.grid(column=0, row=8, sticky='e')
+        col_label.grid(column=0, row=9)
+        col_controls.grid(column=0, row=10, sticky='e')
 
         generate_control(cell_controls, 'cell_size', 3, self.v['cell_size'])
         generate_control(row_controls, 'row_no', 4, self.v['row_no'])
@@ -112,6 +115,7 @@ class ApplicationWindow:
                 for d in range(absolute):
                     self.db.pop(length - d, None)
             self.v['row_no'].set(self.v['row_no'].get() + increment)
+            self.valid_coordinates = [str(r) + ',' + str(c) for r in self.db for c in self.db[r]]
         elif parameter == 'col_no' and 0 < self.v['col_no'].get() + increment < 1002:
             length = len(self.db[1])
             if increment > 0:
@@ -124,8 +128,22 @@ class ApplicationWindow:
                     for d in range(absolute):
                         self.db[r].pop(length - d, None)
             self.v['col_no'].set(self.v['col_no'].get() + increment)
+            self.valid_coordinates = [str(r) + ',' + str(c) for r in self.db for c in self.db[r]]
         self.m['canvas'].destroy()
         self.draw_grid()
+
+    def iterate(self):
+        def nb_count(r, c):
+            neighbour_rel = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]
+            neighbours = 0
+            for rel in neighbour_rel:
+                row_rel, col_rel = rel
+                if str(r + row_rel) + ',' + str(c + col_rel) in self.valid_coordinates:
+                    neighbours += self.db[r + row_rel][c + col_rel]
+            return neighbours
+
+        nb_db = {r: {c: nb_count(r, c) for c in self.db[r]} for r in self.db}
+        print(nb_db)
 
 
 if __name__ == '__main__':
