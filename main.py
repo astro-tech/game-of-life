@@ -1,24 +1,29 @@
 import tkinter as tk
 from tkinter import ttk
+import time
 
 
 class ApplicationWindow:
     def __init__(self, master):
         self.master = master
-        self.v = {'cell_size': tk.IntVar(value=100), 'row_no': tk.IntVar(value=5), 'col_no': tk.IntVar(value=5)}
+        self.v = {'cell_size': tk.IntVar(value=10), 'row_no': tk.IntVar(value=40), 'col_no': tk.IntVar(value=40)}
         self.m = {}     # this has to be a separate dict from self.v otherwise error
         self.db = {
             r: {c: 0 for c in range(1, self.v['col_no'].get() + 1)} for r in range(1, self.v['row_no'].get() + 1)}
         self.valid_coordinates = [str(r) + ',' + str(c) for r in self.db for c in self.db[r]]
-        self.db[3][3] = 1
-        # print(self.db)
+        self.play_going = True
+        self.currently_selected = tk.StringVar()
+
+        # glider
+        self.db[1][1] = 1
+        self.db[2][2] = 1
+        self.db[2][3] = 1
+        self.db[3][1] = 1
+        self.db[3][2] = 1
 
         self.draw_widgets()
         self.draw_grid()
-        # self.m['canvas'].after(3000, lambda: self.m['canvas'].itemconfigure('dead', fill='white', state=tk.DISABLED))
-        # for i in range(1, 26):
-        #     print(self.m['canvas'].gettags(i))
-        # print(self.m)
+        # self.m['canvas'].after(1000, lambda: self.m['canvas'].itemconfigure('dead', fill='white', state=tk.DISABLED))
 
     def draw_widgets(self):
         def generate_control(parent, name, btn_no, variable):
@@ -40,8 +45,8 @@ class ApplicationWindow:
         control_panel.grid(column=0, row=0, sticky='n, s')
 
         controls_label = ttk.Label(control_panel, text='Controls:')
-        play_button = ttk.Button(control_panel, text='Play')
-        pause_button = ttk.Button(control_panel, text='Pause')
+        play_button = ttk.Button(control_panel, text='Play', command=self.play_loop)
+        pause_button = ttk.Button(control_panel, text='Pause', command=self.pause_loop)
         next_button = ttk.Button(control_panel, text='Next', command=self.iterate)
         parameters_label = ttk.Label(control_panel, text='Grid parameters:')
         cell_label = ttk.Label(control_panel, text='Cell size:')
@@ -99,8 +104,6 @@ class ApplicationWindow:
             new_fill = 'white'
             new_status = 'live'
         self.m['canvas'].itemconfigure(f'{r},{c}', fill=new_fill, tag=(f'{r},{c}', new_status))
-        # print(r, c)
-        # print(self.db)
 
     def modify_grid(self, parameter, increment):
         if parameter == 'cell_size' and 0 < self.v['cell_size'].get() + increment < 301:
@@ -155,10 +158,7 @@ class ApplicationWindow:
                     return 0
 
         nb_db = {r: {c: nb_count(r, c) for c in self.db[r]} for r in self.db}
-        # print(nb_db)
-        # print(self.db)
         self.db = {r: {c: cell_outcome(r, c) for c in self.db[r]} for r in self.db}
-        # print(self.db)
         for r in self.db:
             for c in self.db[r]:
                 if self.db[r][c] == 1:
@@ -168,6 +168,16 @@ class ApplicationWindow:
                     new_fill = 'grey20'
                     new_status = 'dead'
                 self.m['canvas'].itemconfigure(f'{r},{c}', fill=new_fill, tag=(f'{r},{c}', new_status))
+
+    def play_loop(self):
+        self.play_going = True
+        while self.play_going:
+            self.iterate()
+            self.master.after(10, lambda: self.currently_selected.set('demo'))
+            self.m['canvas'].wait_variable(self.currently_selected)
+
+    def pause_loop(self):
+        self.play_going = False
 
 
 if __name__ == '__main__':

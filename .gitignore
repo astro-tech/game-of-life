@@ -1,6 +1,7 @@
 ### Python template
 # Byte-compiled / optimized / DLL files
 .idea
+others
 test1.py
 test2.py
 
