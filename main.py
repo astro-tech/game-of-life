@@ -1,12 +1,11 @@
 import tkinter as tk
 from tkinter import ttk
-import time
 
 
 class ApplicationWindow:
     def __init__(self, master):
         self.master = master
-        self.v = {'cell_size': tk.IntVar(value=10), 'row_no': tk.IntVar(value=40), 'col_no': tk.IntVar(value=40)}
+        self.v = {'cell_size': tk.IntVar(value=10), 'row_no': tk.IntVar(value=35), 'col_no': tk.IntVar(value=35)}
         self.m = {}     # this has to be a separate dict from self.v otherwise error
         self.db = {
             r: {c: 0 for c in range(1, self.v['col_no'].get() + 1)} for r in range(1, self.v['row_no'].get() + 1)}
@@ -23,6 +22,8 @@ class ApplicationWindow:
 
         self.draw_widgets()
         self.draw_grid()
+        self.master.protocol("WM_DELETE_WINDOW", lambda: self.exit_game())  # intercepting close button
+
         # self.m['canvas'].after(1000, lambda: self.m['canvas'].itemconfigure('dead', fill='white', state=tk.DISABLED))
 
     def draw_widgets(self):
@@ -136,11 +137,11 @@ class ApplicationWindow:
         self.draw_grid()
 
     def iterate(self):
+        neighbour_rel = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]
+
         def nb_count(r, c):
-            neighbour_rel = [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)]
             neighbours = 0
-            for rel in neighbour_rel:
-                row_rel, col_rel = rel
+            for row_rel, col_rel in neighbour_rel:
                 if str(r + row_rel) + ',' + str(c + col_rel) in self.valid_coordinates:
                     neighbours += self.db[r + row_rel][c + col_rel]
             return neighbours
@@ -158,16 +159,18 @@ class ApplicationWindow:
                     return 0
 
         nb_db = {r: {c: nb_count(r, c) for c in self.db[r]} for r in self.db}
+        previous_db = self.db.copy()
         self.db = {r: {c: cell_outcome(r, c) for c in self.db[r]} for r in self.db}
         for r in self.db:
             for c in self.db[r]:
-                if self.db[r][c] == 1:
-                    new_fill = 'white'
-                    new_status = 'live'
-                else:
-                    new_fill = 'grey20'
-                    new_status = 'dead'
-                self.m['canvas'].itemconfigure(f'{r},{c}', fill=new_fill, tag=(f'{r},{c}', new_status))
+                if self.db[r][c] != previous_db[r][c]:      # to help performance
+                    if self.db[r][c] == 1:
+                        new_fill = 'white'
+                        new_status = 'live'
+                    else:
+                        new_fill = 'grey20'
+                        new_status = 'dead'
+                    self.m['canvas'].itemconfigure(f'{r},{c}', fill=new_fill, tag=(f'{r},{c}', new_status))
 
     def play_loop(self):
         self.play_going = True
@@ -178,6 +181,11 @@ class ApplicationWindow:
 
     def pause_loop(self):
         self.play_going = False
+
+    def exit_game(self):
+        self.play_going = False
+        self.currently_selected.set('exit')
+        self.master.destroy()
 
 
 if __name__ == '__main__':
