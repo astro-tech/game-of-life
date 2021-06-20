@@ -142,8 +142,32 @@ class ApplicationWindow:
                     neighbours += self.db[r + row_rel][c + col_rel]
             return neighbours
 
+        def cell_outcome(r, c):
+            if self.db[r][c] == 1:
+                if nb_db[r][c] == 2 or nb_db[r][c] == 3:
+                    return 1
+                else:
+                    return 0
+            else:
+                if nb_db[r][c] == 3:
+                    return 1
+                else:
+                    return 0
+
         nb_db = {r: {c: nb_count(r, c) for c in self.db[r]} for r in self.db}
-        print(nb_db)
+        # print(nb_db)
+        # print(self.db)
+        self.db = {r: {c: cell_outcome(r, c) for c in self.db[r]} for r in self.db}
+        # print(self.db)
+        for r in self.db:
+            for c in self.db[r]:
+                if self.db[r][c] == 1:
+                    new_fill = 'white'
+                    new_status = 'live'
+                else:
+                    new_fill = 'grey20'
+                    new_status = 'dead'
+                self.m['canvas'].itemconfigure(f'{r},{c}', fill=new_fill, tag=(f'{r},{c}', new_status))
 
 
 if __name__ == '__main__':
