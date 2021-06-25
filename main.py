@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import ttk, filedialog
+from tkinter import ttk, filedialog, messagebox
 import random
 import pandas as pd
 
@@ -54,7 +54,7 @@ class ApplicationWindow:
         self.m['buttons_frame'].grid(column=0, row=1)
         btn_width = 8
         for btn_name, my_command in [('Play', self.play_loop), ('Pause', self.pause_loop), ('Next', self.iterate),
-                                     ('Load', None), ('Save', self.save_grid),
+                                     ('Load', self.load_grid), ('Save', self.save_grid),
                                      ('Random', self.randomize_grid), ('Clear', self.clear_grid)]:
             self.m[f'{btn_name}_btn'] = ttk.Button(self.m['buttons_frame'], text=btn_name, width=btn_width,
                                                    command=my_command)
@@ -219,6 +219,26 @@ class ApplicationWindow:
             transposed_array = array.transpose()    # due to {row: {col: 0}} not {col: {row: 0}}
             transposed_array.to_csv(path)
             print('Grid saved.')
+
+    def load_grid(self):
+        path = tk.filedialog.askopenfilename(filetypes=[('csv', '*.csv')])
+        if path:
+            try:
+                array = pd.read_csv(path, index_col=0)
+                transposed_array = array.transpose()    # due to {row: {col: 0}} not {col: {row: 0}}
+                temp_db = transposed_array.to_dict()
+                self.db = {r: {int(c): temp_db[r][c] for c in temp_db[r]} for r in temp_db}  # to cast col str to int
+                self.v['row_no'].set(len(self.db))
+                self.v['col_no'].set(len(self.db[1]))
+                self.m['canvas'].destroy()
+                self.draw_grid()
+                print('Grid loaded.')
+            except KeyError:
+                print('CSV file corrupted!')
+                tk.messagebox.showerror(title='Error', message='CSV file corrupted!')
+            except ValueError:
+                print('CSV file corrupted!')
+                tk.messagebox.showerror(title='Error', message='CSV file corrupted!')
 
     def exit_game(self):
         self.play_going = False
