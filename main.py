@@ -1,12 +1,13 @@
 import tkinter as tk
 from tkinter import ttk
+import random
 
 
 class ApplicationWindow:
     def __init__(self, master):
         self.master = master
         self.v = {'cell_size': tk.IntVar(value=10), 'row_no': tk.IntVar(value=35), 'col_no': tk.IntVar(value=35)}
-        self.m = {}     # this has to be a separate dict from self.v otherwise error
+        self.m = {}  # this has to be a separate dict from self.v otherwise error
         self.db = {
             r: {c: 0 for c in range(1, self.v['col_no'].get() + 1)} for r in range(1, self.v['row_no'].get() + 1)}
         self.valid_coordinates = [str(r) + ',' + str(c) for r in self.db for c in self.db[r]]
@@ -14,11 +15,11 @@ class ApplicationWindow:
         self.currently_selected = tk.StringVar()
 
         # glider
-        self.db[1][1] = 1
-        self.db[2][2] = 1
-        self.db[2][3] = 1
-        self.db[3][1] = 1
-        self.db[3][2] = 1
+        # self.db[1][1] = 1
+        # self.db[2][2] = 1
+        # self.db[2][3] = 1
+        # self.db[3][1] = 1
+        # self.db[3][2] = 1
 
         self.draw_widgets()
         self.draw_grid()
@@ -29,16 +30,16 @@ class ApplicationWindow:
     def draw_widgets(self):
         def generate_control(parent, name, btn_no, variable):
             gen = [('_u_', 1), ('_d_', 10), ('_h_', 100), ('_k_', 1000)]
-            gen_used = gen[btn_no-1::-1]
-            col = 0
+            gen_used = gen[btn_no - 1::-1]
+            column = 0
             for btn, icr in gen_used:
                 self.m[name + btn + 'u'] = tk.Button(
                     parent, text='▲', width=1, height=1, command=lambda n=name, i=icr: self.modify_grid(n, i))
                 self.m[name + btn + 'd'] = tk.Button(
                     parent, text='▼', width=1, height=1, command=lambda n=name, i=icr: self.modify_grid(n, -i))
-                self.m[name + btn + 'u'].grid(column=col, row=0)
-                self.m[name + btn + 'd'].grid(column=col, row=2)
-                col += 1
+                self.m[name + btn + 'u'].grid(column=column, row=0)
+                self.m[name + btn + 'd'].grid(column=column, row=2)
+                column += 1
                 self.m[name + '_label'] = ttk.Label(parent, textvariable=variable, font='helvetica 24')
                 self.m[name + '_label'].grid(column=0, row=1, columnspan=btn_no, sticky='e')
 
@@ -48,24 +49,18 @@ class ApplicationWindow:
         controls_label = ttk.Label(control_panel, text='Controls:')
         controls_label.grid(column=0, row=0, pady=5)
 
-        buttons_frame = ttk.Frame(control_panel)
-        buttons_frame.grid(column=0, row=1)
+        self.m['buttons_frame'] = ttk.Frame(control_panel)
+        self.m['buttons_frame'].grid(column=0, row=1)
         btn_width = 8
-        play_button = ttk.Button(buttons_frame, text='Play', width=btn_width, command=self.play_loop)
-        pause_button = ttk.Button(buttons_frame, text='Pause', width=btn_width, command=self.pause_loop)
-        next_button = ttk.Button(buttons_frame, text='Next', width=btn_width, command=self.iterate)
-        load_button = ttk.Button(buttons_frame, text='Load', width=btn_width)
-        save_button = ttk.Button(buttons_frame, text='Save', width=btn_width)
-        random_button = ttk.Button(buttons_frame, text='Random', width=btn_width)
-        clear_button = ttk.Button(buttons_frame, text='Clear', width=btn_width, command=self.clear_grid)
+        for btn_name, my_command in [('Play', self.play_loop), ('Pause', self.pause_loop), ('Next', self.iterate),
+                                     ('Load', None), ('Save', None), ('Random', self.randomize_grid),
+                                     ('Clear', self.clear_grid)]:
+            self.m[f'{btn_name}_btn'] = ttk.Button(self.m['buttons_frame'], text=btn_name, width=btn_width,
+                                                   command=my_command)
         btn_pad_xy = (2, 2)
-        play_button.grid(column=0, row=0, padx=btn_pad_xy[0], pady=btn_pad_xy[1])
-        pause_button.grid(column=1, row=0, padx=btn_pad_xy[0], pady=btn_pad_xy[1])
-        next_button.grid(column=0, row=1, padx=btn_pad_xy[0], pady=btn_pad_xy[1])
-        load_button.grid(column=0, row=2, padx=btn_pad_xy[0], pady=btn_pad_xy[1])
-        save_button.grid(column=1, row=2, padx=btn_pad_xy[0], pady=btn_pad_xy[1])
-        random_button.grid(column=0, row=3, padx=btn_pad_xy[0], pady=btn_pad_xy[1])
-        clear_button.grid(column=1, row=3, padx=btn_pad_xy[0], pady=btn_pad_xy[1])
+        for btn_name, col, row in [('Play', 0, 0), ('Pause', 1, 0), ('Next', 0, 1), ('Load', 0, 2), ('Save', 1, 2),
+                                   ('Random', 0, 3), ('Clear', 1, 3)]:
+            self.m[f'{btn_name}_btn'].grid(column=col, row=row, padx=btn_pad_xy[0], pady=btn_pad_xy[1])
 
         parameters_label = ttk.Label(control_panel, text='Grid parameters:')
         parameters_label.grid(column=0, row=2, pady=5)
@@ -179,7 +174,7 @@ class ApplicationWindow:
         self.db = {r: {c: cell_outcome(r, c) for c in self.db[r]} for r in self.db}
         for r in self.db:
             for c in self.db[r]:
-                if self.db[r][c] != previous_db[r][c]:      # to help performance
+                if self.db[r][c] != previous_db[r][c]:  # to help performance
                     if self.db[r][c] == 1:
                         new_fill = 'white'
                         new_status = 'live'
@@ -189,6 +184,9 @@ class ApplicationWindow:
                     self.m['canvas'].itemconfigure(f'{r},{c}', fill=new_fill, tag=(f'{r},{c}', new_status))
 
     def play_loop(self):
+        for button in self.m['buttons_frame'].winfo_children():
+            button.state(['disabled'])
+        self.m['Pause_btn'].state(['!disabled'])
         self.play_going = True
         while self.play_going:
             self.iterate()
@@ -196,11 +194,20 @@ class ApplicationWindow:
             self.m['canvas'].wait_variable(self.currently_selected)
 
     def pause_loop(self):
+        for button in self.m['buttons_frame'].winfo_children():
+            button.state(['!disabled'])
         self.play_going = False
 
     def clear_grid(self):
         self.db = {
             r: {c: 0 for c in range(1, self.v['col_no'].get() + 1)} for r in range(1, self.v['row_no'].get() + 1)}
+        self.m['canvas'].destroy()
+        self.draw_grid()
+
+    def randomize_grid(self):
+        for r in self.db:
+            for c in self.db[r]:
+                self.db[r][c] = random.getrandbits(1)
         self.m['canvas'].destroy()
         self.draw_grid()
 
