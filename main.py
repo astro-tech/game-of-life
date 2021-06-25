@@ -1,12 +1,13 @@
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, filedialog
 import random
+import pandas as pd
 
 
 class ApplicationWindow:
     def __init__(self, master):
         self.master = master
-        self.v = {'cell_size': tk.IntVar(value=10), 'row_no': tk.IntVar(value=35), 'col_no': tk.IntVar(value=35)}
+        self.v = {'cell_size': tk.IntVar(value=10), 'row_no': tk.IntVar(value=5), 'col_no': tk.IntVar(value=5)}
         self.m = {}  # this has to be a separate dict from self.v otherwise error
         self.db = {
             r: {c: 0 for c in range(1, self.v['col_no'].get() + 1)} for r in range(1, self.v['row_no'].get() + 1)}
@@ -53,8 +54,8 @@ class ApplicationWindow:
         self.m['buttons_frame'].grid(column=0, row=1)
         btn_width = 8
         for btn_name, my_command in [('Play', self.play_loop), ('Pause', self.pause_loop), ('Next', self.iterate),
-                                     ('Load', None), ('Save', None), ('Random', self.randomize_grid),
-                                     ('Clear', self.clear_grid)]:
+                                     ('Load', None), ('Save', self.save_grid),
+                                     ('Random', self.randomize_grid), ('Clear', self.clear_grid)]:
             self.m[f'{btn_name}_btn'] = ttk.Button(self.m['buttons_frame'], text=btn_name, width=btn_width,
                                                    command=my_command)
         btn_pad_xy = (2, 2)
@@ -210,6 +211,14 @@ class ApplicationWindow:
                 self.db[r][c] = random.getrandbits(1)
         self.m['canvas'].destroy()
         self.draw_grid()
+
+    def save_grid(self):
+        path = tk.filedialog.asksaveasfilename(defaultextension='.csv', filetypes=[('csv', '*.csv')])
+        if path:
+            array = pd.DataFrame(self.db)
+            transposed_array = array.transpose()    # due to {row: {col: 0}} not {col: {row: 0}}
+            transposed_array.to_csv(path)
+            print('Grid saved.')
 
     def exit_game(self):
         self.play_going = False
