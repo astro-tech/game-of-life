@@ -46,31 +46,47 @@ class ApplicationWindow:
         control_panel.grid(column=0, row=0, sticky='n, s')
 
         controls_label = ttk.Label(control_panel, text='Controls:')
-        play_button = ttk.Button(control_panel, text='Play', command=self.play_loop)
-        pause_button = ttk.Button(control_panel, text='Pause', command=self.pause_loop)
-        next_button = ttk.Button(control_panel, text='Next', command=self.iterate)
-        parameters_label = ttk.Label(control_panel, text='Grid parameters:')
-        cell_label = ttk.Label(control_panel, text='Cell size:')
-        cell_controls = ttk.Frame(control_panel)
-        row_label = ttk.Label(control_panel, text='Number of rows:')
-        row_controls = ttk.Frame(control_panel)
-        col_label = ttk.Label(control_panel, text='Number of columns:')
-        col_controls = ttk.Frame(control_panel)
         controls_label.grid(column=0, row=0, pady=5)
-        play_button.grid(column=0, row=1, pady=2)
-        pause_button.grid(column=0, row=2, pady=2)
-        next_button.grid(column=0, row=3, pady=2)
-        parameters_label.grid(column=0, row=4, pady=5)
-        cell_label.grid(column=0, row=5)
-        cell_controls.grid(column=0, row=6, sticky='e')
-        row_label.grid(column=0, row=7)
-        row_controls.grid(column=0, row=8, sticky='e')
-        col_label.grid(column=0, row=9)
-        col_controls.grid(column=0, row=10, sticky='e')
 
+        buttons_frame = ttk.Frame(control_panel)
+        buttons_frame.grid(column=0, row=1)
+        btn_width = 8
+        play_button = ttk.Button(buttons_frame, text='Play', width=btn_width, command=self.play_loop)
+        pause_button = ttk.Button(buttons_frame, text='Pause', width=btn_width, command=self.pause_loop)
+        next_button = ttk.Button(buttons_frame, text='Next', width=btn_width, command=self.iterate)
+        load_button = ttk.Button(buttons_frame, text='Load', width=btn_width)
+        save_button = ttk.Button(buttons_frame, text='Save', width=btn_width)
+        random_button = ttk.Button(buttons_frame, text='Random', width=btn_width)
+        clear_button = ttk.Button(buttons_frame, text='Clear', width=btn_width, command=self.clear_grid)
+        btn_pad_xy = (2, 2)
+        play_button.grid(column=0, row=0, padx=btn_pad_xy[0], pady=btn_pad_xy[1])
+        pause_button.grid(column=1, row=0, padx=btn_pad_xy[0], pady=btn_pad_xy[1])
+        next_button.grid(column=0, row=1, padx=btn_pad_xy[0], pady=btn_pad_xy[1])
+        load_button.grid(column=0, row=2, padx=btn_pad_xy[0], pady=btn_pad_xy[1])
+        save_button.grid(column=1, row=2, padx=btn_pad_xy[0], pady=btn_pad_xy[1])
+        random_button.grid(column=0, row=3, padx=btn_pad_xy[0], pady=btn_pad_xy[1])
+        clear_button.grid(column=1, row=3, padx=btn_pad_xy[0], pady=btn_pad_xy[1])
+
+        parameters_label = ttk.Label(control_panel, text='Grid parameters:')
+        parameters_label.grid(column=0, row=2, pady=5)
+
+        cell_label = ttk.Label(control_panel, text='Cell size:')
+        cell_label.grid(column=0, row=3)
+        cell_controls = ttk.Frame(control_panel)
         generate_control(cell_controls, 'cell_size', 3, self.v['cell_size'])
+        cell_controls.grid(column=0, row=4, sticky='e')
+
+        row_label = ttk.Label(control_panel, text='Number of rows:')
+        row_label.grid(column=0, row=5)
+        row_controls = ttk.Frame(control_panel)
         generate_control(row_controls, 'row_no', 4, self.v['row_no'])
+        row_controls.grid(column=0, row=6, sticky='e')
+
+        col_label = ttk.Label(control_panel, text='Number of columns:')
+        col_label.grid(column=0, row=7)
+        col_controls = ttk.Frame(control_panel)
         generate_control(col_controls, 'col_no', 4, self.v['col_no'])
+        col_controls.grid(column=0, row=8, sticky='e')
 
     def draw_grid(self):
         self.m['canvas'] = tk.Canvas(self.master, width=self.v['cell_size'].get() * self.v['col_no'].get(),
@@ -181,6 +197,12 @@ class ApplicationWindow:
 
     def pause_loop(self):
         self.play_going = False
+
+    def clear_grid(self):
+        self.db = {
+            r: {c: 0 for c in range(1, self.v['col_no'].get() + 1)} for r in range(1, self.v['row_no'].get() + 1)}
+        self.m['canvas'].destroy()
+        self.draw_grid()
 
     def exit_game(self):
         self.play_going = False
